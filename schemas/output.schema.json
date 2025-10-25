@@ -22,21 +22,22 @@
   "definitions": {
     "LimitAssessment": {
       "type": "object",
-      "required": ["limit", "currentHours", "projectedHours", "remainingHours", "riskLevel", "recoveryOptions"],
+      "required": ["limit", "totalWorkHoursToDate", "projectedTotalWorkHours", "projectedOvertimeHours", "remainingToLimit", "riskLevel", "recoveryOptions"],
       "properties": {
         "limit": { "type": "number" },
-        "currentHours": { "type": "number" },
-        "projectedHours": { "type": "number" },
-        "remainingHours": { "type": "number" },
+        "totalWorkHoursToDate": { "type": "number" },
+        "projectedTotalWorkHours": { "type": "number" },
+        "projectedOvertimeHours": { "type": "number" },
+        "remainingToLimit": { "type": "number" },
         "riskLevel": { "type": "string", "enum": ["OK", "WARN", "LIMIT"] },
         "recoveryOptions": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["paidLeaveDays", "maxDailyOvertimeHours", "description"],
+            "required": ["paidLeaveDays", "maxDailyWorkHours", "description"],
             "properties": {
               "paidLeaveDays": { "type": "integer", "minimum": 0 },
-              "maxDailyOvertimeHours": { "type": "number", "minimum": 0 },
+              "maxDailyWorkHours": { "type": "number", "minimum": 0 },
               "description": { "type": "string" }
             },
             "additionalProperties": false

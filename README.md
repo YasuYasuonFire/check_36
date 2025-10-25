@@ -229,25 +229,138 @@ python src/check36/server.py
 
 ## Claude Desktop での使用方法
 
-### 1. MCP設定ファイルに追加
+### 1. リポジトリのクローン
 
-`~/Library/Application Support/Claude/claude_desktop_config.json` に以下を追加：
+まず、このリポジトリをクローンして、パスを確認します：
+
+```bash
+# リポジトリをクローン
+git clone https://github.com/YasuYasuonFire/check_36.git
+cd check_36
+
+# 現在のパスを確認（このパスを後で使います）
+pwd
+# 例: /Users/username/projects/check_36
+```
+
+### 2. MCP設定ファイルに追加
+
+`~/Library/Application Support/Claude/claude_desktop_config.json` を編集します。
+
+**⚠️ 重要な注意点:**
+- `cwd` には、**上記で確認した実際のパス**を指定してください
+- `command` は、お使いのPython環境に応じて変更してください
+
+#### パターン1: システムのPythonを使用する場合
 
 ```json
 {
   "mcpServers": {
     "check36": {
-      "command": "python",
-      "args": ["-m", "src.check36.server"],
-      "cwd": "/path/to/check_36"
+      "command": "python3",
+      "args": ["-m", "check36.server"],
+      "cwd": "/Users/username/projects/check_36"
     }
   }
 }
 ```
 
-### 2. Claude Desktop を再起動
+#### パターン2: pyenvを使用している場合
 
-### 3. 使用例
+```json
+{
+  "mcpServers": {
+    "check36": {
+      "command": "/Users/username/.pyenv/shims/python",
+      "args": ["-m", "check36.server"],
+      "cwd": "/Users/username/projects/check_36"
+    }
+  }
+}
+```
+
+pyenvのパスを確認するには：
+```bash
+which python
+# 例: /Users/username/.pyenv/shims/python
+```
+
+#### パターン3: venv（仮想環境）を使用する場合
+
+```json
+{
+  "mcpServers": {
+    "check36": {
+      "command": "/Users/username/projects/check_36/.venv/bin/python",
+      "args": ["-m", "check36.server"],
+      "cwd": "/Users/username/projects/check_36"
+    }
+  }
+}
+```
+
+venvを作成する場合：
+```bash
+cd /Users/username/projects/check_36
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .
+```
+
+#### パターン4: uvを使用する場合（推奨）
+
+```json
+{
+  "mcpServers": {
+    "check36": {
+      "command": "uv",
+      "args": ["run", "--directory", "/Users/username/projects/check_36", "python", "-m", "check36.server"],
+      "cwd": "/Users/username/projects/check_36"
+    }
+  }
+}
+```
+
+uvを使う場合の準備：
+```bash
+# uvのインストール（未インストールの場合）
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# プロジェクトディレクトリで依存関係をインストール
+cd /Users/username/projects/check_36
+uv sync
+```
+
+### 3. 設定の確認ポイント
+
+✅ **必ず確認すること:**
+1. `cwd` のパスが実際のクローン先と一致しているか
+2. `command` のPythonパスが正しいか（`which python` で確認）
+3. JSON形式が正しいか（カンマ、括弧の閉じ忘れなど）
+4. 既に他のMCPサーバーを設定している場合は、カンマで区切る
+
+**複数のMCPサーバーを設定する例:**
+```json
+{
+  "mcpServers": {
+    "other-server": {
+      "command": "...",
+      "args": ["..."]
+    },
+    "check36": {
+      "command": "python3",
+      "args": ["-m", "check36.server"],
+      "cwd": "/Users/username/projects/check_36"
+    }
+  }
+}
+```
+
+### 4. Claude Desktop を再起動
+
+Claude Desktopアプリを完全に終了して、再起動してください。
+
+### 5. 使用例
 
 Claude に以下のように話しかけます：
 

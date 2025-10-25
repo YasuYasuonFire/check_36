@@ -16,10 +16,13 @@ class SimpleInput(BaseModel):
 
     totalWorkHoursToDate: float = Field(ge=0, description="前日までの総労働時間")
     holidayWorkHoursToDate: float = Field(ge=0, description="前日までの休日労働時間")
-    workingDaysElapsed: int = Field(ge=0, description="前日までに働いた日数")
-    workingDaysRemaining: int = Field(ge=0, description="今日を含む残りの稼働日数")
+    workingDaysElapsed: Optional[int] = Field(None, ge=0, description="前日までに働いた日数（省略時は自動計算）")
+    workingDaysRemaining: Optional[int] = Field(None, ge=0, description="今日を含む残りの稼働日数（省略時は自動計算）")
     currentDate: Optional[str] = Field(
         None, pattern=r"^\d{4}-\d{2}-\d{2}$", description="評価基準日（YYYY-MM-DD）"
+    )
+    autoCalculateWeekdays: bool = Field(
+        default=True, description="土日を除外して自動計算するか（True: 平日のみ、False: 手動入力値を使用）"
     )
     config: Optional[ConfigModel] = None
 

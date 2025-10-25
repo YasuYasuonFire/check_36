@@ -8,11 +8,33 @@
 - **月45時間上限**（時間外労働のみ）
 - **80時間基準**（時間外+休日労働、簡易単月評価）
 
+## 🆕 新機能（v2.0）
+
+**営業日（平日）自動計算機能**
+
+土日を除外した稼働日数を自動計算できるようになりました！
+
+- `workingDaysElapsed` と `workingDaysRemaining` の入力が不要に
+- 日付から自動的に平日のみをカウント
+- 詳細は [営業日計算ドキュメント](docs/WEEKDAY_CALCULATION.md) を参照
+
 ## 使用例
 
 ### 入力例
 
-Claude Desktop や MCP Inspector で以下のように入力します：
+#### 簡単な使い方（推奨）- 自動計算モード
+
+```json
+{
+  "totalWorkHoursToDate": 150.5,
+  "holidayWorkHoursToDate": 8.0,
+  "currentDate": "2025-04-18"
+}
+```
+
+稼働日数は自動計算されます（土日を除く平日のみカウント）。
+
+#### 詳細な使い方 - 手動入力モード
 
 ```json
 {
@@ -20,7 +42,8 @@ Claude Desktop や MCP Inspector で以下のように入力します：
   "holidayWorkHoursToDate": 8.0,
   "workingDaysElapsed": 15,
   "workingDaysRemaining": 8,
-  "currentDate": "2025-04-18"
+  "currentDate": "2025-04-18",
+  "autoCalculateWeekdays": false
 }
 ```
 
@@ -30,12 +53,17 @@ Claude Desktop や MCP Inspector で以下のように入力します：
   - 時間外・休日を含む全ての労働時間
   - ⚠️ 今日の分は含めない（確定値のみ）
 - `holidayWorkHoursToDate`: **前日までの**休日労働 累計（時間）【必須】
-- `workingDaysElapsed`: **前日までに**働いた日数【必須】
-  - 月初から昨日までの実際に働いた日数
-- `workingDaysRemaining`: **今日を含む**月末までの残り稼働日数【必須】
-  - 今日以降、月末までに働く予定の日数
+- `workingDaysElapsed`: **前日までに**働いた日数【任意】
+  - 省略時は自動計算（月初から昨日までの平日数）
+  - 手動入力する場合は `autoCalculateWeekdays: false` を指定
+- `workingDaysRemaining`: **今日を含む**月末までの残り稼働日数【任意】
+  - 省略時は自動計算（今日から月末までの平日数）
+  - 手動入力する場合は `autoCalculateWeekdays: false` を指定
 - `currentDate`: 評価基準日（YYYY-MM-DD形式、省略時は今日）【任意】
   - 月の暦日数算出に使用
+- `autoCalculateWeekdays`: 稼働日数の自動計算（デフォルト: true）【任意】
+  - `true`: 土日を除外して自動計算
+  - `false`: 手動入力値を使用
 
 **計算の仕組み**
 - 月の法定労働時間を自動計算：`(月の暦日数 ÷ 7) × 40時間`

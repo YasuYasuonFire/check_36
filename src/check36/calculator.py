@@ -4,7 +4,14 @@ import math
 from typing import Literal
 
 from .models import LimitAssessment, RecoveryOption, SimpleAssessmentOutput, SimpleInput
-from .utils import calculate_legal_work_hours, get_current_date, get_days_in_month, parse_date
+from .utils import (
+    calculate_legal_work_hours,
+    get_current_date,
+    get_days_in_month,
+    get_elapsed_weekdays_in_month,
+    get_remaining_weekdays_in_month,
+    parse_date,
+)
 
 
 def assess_current_month(input_data: SimpleInput) -> SimpleAssessmentOutput:
@@ -13,6 +20,16 @@ def assess_current_month(input_data: SimpleInput) -> SimpleAssessmentOutput:
     # 日付の取得・パース
     current_date_str = input_data.currentDate or get_current_date()
     year, month, _ = parse_date(current_date_str)
+    
+    # 稼働日数の決定（自動計算 or 手動入力）
+    if input_data.autoCalculateWeekdays:
+        # 土日を除外して自動計算
+        working_days_elapsed = get_elapsed_weekdays_in_month(current_date_str)
+        working_days_remaining = get_remaining_weekdays_in_month(current_date_str)
+    else:
+        # 手動入力値を使用（後方互換性）
+        working_days_elapsed = input_data.workingDaysElapsed or 0
+        working_days_remaining = input_data.workingDaysRemaining or 0
 
     # 月の情報
     days_in_month = get_days_in_month(year, month)
@@ -20,10 +37,10 @@ def assess_current_month(input_data: SimpleInput) -> SimpleAssessmentOutput:
 
     # 予測計算
     avg_daily_hours = _calculate_average_daily_hours(
-        input_data.totalWorkHoursToDate, input_data.workingDaysElapsed
+        input_data.totalWorkHoursToDate, working_days_elapsed
     )
     projected_total_hours = input_data.totalWorkHoursToDate + (
-        input_data.workingDaysRemaining * avg_daily_hours
+        working_days_remaining * avg_daily_hours
     )
     projected_overtime = projected_total_hours - legal_work_hours
     projected_overtime_with_holiday = projected_overtime + input_data.holidayWorkHoursToDate
@@ -40,7 +57,7 @@ def assess_current_month(input_data: SimpleInput) -> SimpleAssessmentOutput:
         projected_total_hours=projected_total_hours,
         projected_overtime=projected_overtime,
         legal_work_hours=legal_work_hours,
-        working_days_remaining=input_data.workingDaysRemaining,
+        working_days_remaining=working_days_remaining,
         avg_daily_hours=avg_daily_hours,
         warn_ratio=warn_ratio,
     )
@@ -52,7 +69,7 @@ def assess_current_month(input_data: SimpleInput) -> SimpleAssessmentOutput:
         projected_total_hours=projected_total_hours,
         projected_overtime=projected_overtime_with_holiday,
         legal_work_hours=legal_work_hours,
-        working_days_remaining=input_data.workingDaysRemaining,
+        working_days_remaining=working_days_remaining,
         avg_daily_hours=avg_daily_hours,
         warn_ratio=warn_ratio,
     )

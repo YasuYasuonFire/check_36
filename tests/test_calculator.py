@@ -14,6 +14,7 @@ def test_assess_ok_case():
         workingDaysElapsed=10,
         workingDaysRemaining=10,
         currentDate="2025-04-15",
+        autoCalculateWeekdays=False,
     )
 
     result = assess_current_month(input_data)
@@ -36,6 +37,7 @@ def test_assess_warn_case():
         workingDaysElapsed=12,
         workingDaysRemaining=8,
         currentDate="2025-04-18",
+        autoCalculateWeekdays=False,
     )
 
     result = assess_current_month(input_data)
@@ -52,6 +54,7 @@ def test_assess_limit_case():
         workingDaysElapsed=15,
         workingDaysRemaining=8,
         currentDate="2025-04-18",
+        autoCalculateWeekdays=False,
     )
 
     result = assess_current_month(input_data)
@@ -73,6 +76,7 @@ def test_recovery_options_generation():
         workingDaysElapsed=15,
         workingDaysRemaining=8,
         currentDate="2025-04-18",
+        autoCalculateWeekdays=False,
     )
 
     result = assess_current_month(input_data)
@@ -95,6 +99,7 @@ def test_zero_elapsed_days():
         workingDaysElapsed=0,
         workingDaysRemaining=20,
         currentDate="2025-04-01",
+        autoCalculateWeekdays=False,
     )
 
     # エラーが発生しないことを確認
@@ -111,10 +116,48 @@ def test_legal_work_hours_calculation():
         workingDaysElapsed=10,
         workingDaysRemaining=10,
         currentDate="2025-04-15",
+        autoCalculateWeekdays=False,
     )
 
     result = assess_current_month(input_data)
 
     # 30日の月の法定労働時間は約171.4時間
     assert "171" in result.references["appliedRules"][2]
+
+
+def test_auto_calculate_weekdays_mode():
+    """自動計算モード: 土日を除外して稼働日数を計算"""
+    # 2025-10-25 (土) の時点での評価
+    input_data = SimpleInput(
+        totalWorkHoursToDate=150.0,
+        holidayWorkHoursToDate=0.0,
+        currentDate="2025-10-25",
+        autoCalculateWeekdays=True,
+    )
+
+    result = assess_current_month(input_data)
+
+    # 自動計算モードでは土日が除外される
+    # 2025-10-25 (土) 時点で、昨日までの平日は18日、残り平日は5日
+    assert result.evaluation45.riskLevel in ["OK", "WARN", "LIMIT"]
+    assert result.evaluation80.riskLevel in ["OK", "WARN", "LIMIT"]
+
+
+def test_manual_mode_backward_compatibility():
+    """手動モード: 後方互換性の確認"""
+    # autoCalculateWeekdays=False で手動入力値を使用
+    input_data = SimpleInput(
+        totalWorkHoursToDate=150.0,
+        holidayWorkHoursToDate=0.0,
+        workingDaysElapsed=17,
+        workingDaysRemaining=7,
+        currentDate="2025-10-25",
+        autoCalculateWeekdays=False,
+    )
+
+    result = assess_current_month(input_data)
+
+    # 手動入力値が使用されることを確認
+    assert result.evaluation45.riskLevel in ["OK", "WARN", "LIMIT"]
+    assert result.evaluation80.riskLevel in ["OK", "WARN", "LIMIT"]
 

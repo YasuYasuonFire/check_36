@@ -55,10 +55,10 @@ def assess_current_month(input_data: SimpleInput) -> SimpleAssessmentOutput:
         limit=45.0,
         total_work_hours_to_date=input_data.totalWorkHoursToDate,
         projected_total_hours=projected_total_hours,
-        projected_overtime=projected_overtime,
+        projected_overtime=projected_overtime_with_holiday, # 休日労働を含める
+        holiday_work_hours_to_date=input_data.holidayWorkHoursToDate, # リカバリー計算用に渡す
         legal_work_hours=legal_work_hours,
         working_days_remaining=working_days_remaining,
-        avg_daily_hours=avg_daily_hours,
         warn_ratio=warn_ratio,
     )
 
@@ -68,16 +68,17 @@ def assess_current_month(input_data: SimpleInput) -> SimpleAssessmentOutput:
         total_work_hours_to_date=input_data.totalWorkHoursToDate,
         projected_total_hours=projected_total_hours,
         projected_overtime=projected_overtime_with_holiday,
+        holiday_work_hours_to_date=input_data.holidayWorkHoursToDate, # リカバリー計算用に渡す
         legal_work_hours=legal_work_hours,
         working_days_remaining=working_days_remaining,
-        avg_daily_hours=avg_daily_hours,
         warn_ratio=warn_ratio,
     )
 
     # 適用ルール
     applied_rules = [
-        "月45時間上限（時間外のみ）",
-        "80時間基準（休日労働含む、簡易単月評価）",
+        "方針: 安全側に倒すため、45h/80h評価ともに「時間外+休日」で評価",
+        "月45時間上限（時間外労働+休日労働）",
+        "80時間基準（時間外労働+休日労働、簡易単月評価）",
         f"月の法定労働時間: {legal_work_hours:.1f}時間（{days_in_month}日の月）",
     ]
 
@@ -98,9 +99,9 @@ def _assess_limit(
     total_work_hours_to_date: float,
     projected_total_hours: float,
     projected_overtime: float,
+    holiday_work_hours_to_date: float,
     legal_work_hours: float,
     working_days_remaining: int,
-    avg_daily_hours: float,
     warn_ratio: float,
 ) -> LimitAssessment:
     """上限に対する評価を実施"""
@@ -116,16 +117,16 @@ def _assess_limit(
         limit=limit,
         total_work_hours_to_date=total_work_hours_to_date,
         projected_overtime=projected_overtime,
+        holiday_work_hours_to_date=holiday_work_hours_to_date,
         legal_work_hours=legal_work_hours,
         working_days_remaining=working_days_remaining,
-        avg_daily_hours=avg_daily_hours,
     )
 
     return LimitAssessment(
         limit=limit,
         totalWorkHoursToDate=total_work_hours_to_date,
         projectedTotalWorkHours=projected_total_hours,
-        projectedOvertimeHours=projected_overtime,
+        projectedOvertimeAndHolidayHours=projected_overtime,
         remainingToLimit=remaining_to_limit,
         riskLevel=risk_level,
         recoveryOptions=recovery_options,
@@ -148,33 +149,63 @@ def _generate_recovery_options(
     limit: float,
     total_work_hours_to_date: float,
     projected_overtime: float,
+    holiday_work_hours_to_date: float,
     legal_work_hours: float,
     working_days_remaining: int,
-    avg_daily_hours: float,
 ) -> list[RecoveryOption]:
     """リカバリー選択肢を生成"""
 
     options: list[RecoveryOption] = []
+    
+    # 45h/80hリミットから、現在までの休日労働時間を除いたものが、
+    # 残り期間の時間外労働で許容される上限となる
+    allowed_overtime_for_remaining_days = limit - holiday_work_hours_to_date
 
     # 上限達成に必要な総労働時間
-    target_total_hours = legal_work_hours + limit
+    target_total_hours = legal_work_hours + allowed_overtime_for_remaining_days
 
     # 残り期間で可能な総労働時間
     remaining_possible_hours = target_total_hours - total_work_hours_to_date
+
+    # 年休取得による削減時間（1日あたり8時間固定）
+    PAID_LEAVE_REDUCTION_HOURS = 8.0
 
     # 年休0〜5日のパターンを生成
     for paid_leave_days in range(min(6, working_days_remaining + 1)):
         actual_working_days = working_days_remaining - paid_leave_days
 
-        if actual_working_days <= 0:
-            # 実働日数が0以下の場合はスキップ
-            continue
+        if actual_working_days <= 0 and remaining_possible_hours < 0:
+            # 稼働日数がなく、かつ既に上限を超過している場合は表示しない
+            if paid_leave_days == 0: # 年休0日でもダメな場合のみループを抜ける
+                options.append(
+                    RecoveryOption(
+                        paidLeaveDays=0,
+                        maxDailyWorkHours=0.0,
+                        description=f"年休なし：残り稼働日0日。既に{abs(remaining_possible_hours):.2f}時間超過しています。",
+                    )
+                )
+            break
 
-        # 年休取得による削減
-        reduced_hours = remaining_possible_hours - (paid_leave_days * avg_daily_hours)
+        # 年休取得で労働時間がマイナスになる場合も考慮
+        remaining_hours_after_leave = remaining_possible_hours + (paid_leave_days * PAID_LEAVE_REDUCTION_HOURS)
+        
+        if actual_working_days <= 0:
+            if remaining_hours_after_leave >= 0:
+                # 休みきればOK
+                 options.append(
+                    RecoveryOption(
+                        paidLeaveDays=paid_leave_days,
+                        maxDailyWorkHours=0.0,
+                        description=f"年休{paid_leave_days}日取得：残り稼働日なし。これで上限内に収まります。",
+                    )
+                )
+                 break
+            else:
+                continue
+
 
         # 1日あたり上限
-        max_daily_hours = reduced_hours / actual_working_days
+        max_daily_hours = remaining_hours_after_leave / actual_working_days
 
         if max_daily_hours < 0:
             max_daily_hours = 0.0

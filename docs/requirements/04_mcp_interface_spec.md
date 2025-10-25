@@ -20,7 +20,7 @@
       limit: number,                      // 上限値（45）
       totalWorkHoursToDate: number,       // 昨日までの総労働時間（入力値）
       projectedTotalWorkHours: number,    // 月末予測の総労働時間
-      projectedOvertimeHours: number,     // 月末予測の時間外労働
+      projectedOvertimeAndHolidayHours: number, // 月末予測の時間外+休日労働
       remainingToLimit: number,           // 上限までの残り（負=超過見込み）
       riskLevel: "OK"|"WARN"|"LIMIT",
       recoveryOptions: [
@@ -35,7 +35,7 @@
       limit: number,                      // 上限値（80）
       totalWorkHoursToDate: number,       // 昨日までの総労働時間（入力値）
       projectedTotalWorkHours: number,    // 月末予測の総労働時間
-      projectedOvertimeHours: number,     // 月末予測の時間外+休日労働
+      projectedOvertimeAndHolidayHours: number, // 月末予測の時間外+休日労働
       remainingToLimit: number,           // 上限までの残り（負=超過見込み）
       riskLevel: "OK"|"WARN"|"LIMIT",
       recoveryOptions: [
@@ -48,6 +48,7 @@
     }
   - references: { appliedRules: string[] }
   
+  ※ 方針: 安全側に倒すため、45h評価・80h評価ともに「時間外+休日」の合算値で評価する
   ※ フレックス制度対応：「現在の時間外」は算出せず、予測ベースで評価
 
 - 備考

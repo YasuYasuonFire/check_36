@@ -13,6 +13,9 @@ dependencies = [
     "python-dateutil>=2.8.0",
 ]
 
+[project.scripts]
+check36 = "check36.server:main"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0.0",

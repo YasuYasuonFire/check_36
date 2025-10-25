@@ -1,0 +1,6 @@
+[
+  { "month": "2025-01", "overtimeHours": 10.5, "holidayWorkHours": 0 },
+  { "month": "2025-02", "overtimeHours": 22.0, "holidayWorkHours": 5.0 },
+  { "month": "2025-03", "overtimeHours": 35.0, "holidayWorkHours": 2.5 },
+  { "month": "2025-04", "overtimeHours": 12.0, "holidayWorkHours": 0 }
+]

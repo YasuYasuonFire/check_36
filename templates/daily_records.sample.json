@@ -1,0 +1,5 @@
+[
+  { "date": "2025-04-01", "overtimeHours": 1.5, "holidayWorkHours": 0, "paidLeaveTaken": false },
+  { "date": "2025-04-02", "overtimeHours": 0.0, "holidayWorkHours": 0, "paidLeaveTaken": true },
+  { "date": "2025-04-03", "overtimeHours": 2.0, "holidayWorkHours": 0, "paidLeaveTaken": false }
+]

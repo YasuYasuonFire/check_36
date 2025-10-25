@@ -1,0 +1,8 @@
+{
+  "totalWorkHoursToDate": 150.5,
+  "holidayWorkHoursToDate": 8.0,
+  "workingDaysElapsed": 15,
+  "workingDaysRemaining": 8,
+  "currentDate": "2025-04-18",
+  "config": { "thresholds": { "warnRatio": 0.8 } }
+}

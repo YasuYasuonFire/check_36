@@ -1,0 +1,10 @@
+{
+  "legal": {
+    "monthlyOvertimeLimit": 45,
+    "annualOvertimeLimit": 360,
+    "annualOvertimeLimitWithSpecial": 720
+  },
+  "thresholds": {
+    "warnRatio": 0.8
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/check36.simple.output.schema.json",
+  "title": "Check36 Simple Output",
+  "type": "object",
+  "required": ["evaluation45", "evaluation80", "references"],
+  "properties": {
+    "evaluation45": {
+      "$ref": "#/definitions/LimitAssessment"
+    },
+    "evaluation80": {
+      "$ref": "#/definitions/LimitAssessment"
+    },
+    "references": {
+      "type": "object",
+      "properties": {
+        "appliedRules": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    }
+  },
+  "definitions": {
+    "LimitAssessment": {
+      "type": "object",
+      "required": ["limit", "currentHours", "projectedHours", "remainingHours", "riskLevel", "recoveryOptions"],
+      "properties": {
+        "limit": { "type": "number" },
+        "currentHours": { "type": "number" },
+        "projectedHours": { "type": "number" },
+        "remainingHours": { "type": "number" },
+        "riskLevel": { "type": "string", "enum": ["OK", "WARN", "LIMIT"] },
+        "recoveryOptions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["paidLeaveDays", "maxDailyOvertimeHours", "description"],
+            "properties": {
+              "paidLeaveDays": { "type": "integer", "minimum": 0 },
+              "maxDailyOvertimeHours": { "type": "number", "minimum": 0 },
+              "description": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

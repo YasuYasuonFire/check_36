@@ -50,46 +50,49 @@ Claude Desktop や MCP Inspector で以下のように入力します：
 {
   "evaluation45": {
     "limit": 45,
-    "currentHours": 32.5,
-    "projectedHours": 48.3,
-    "remainingHours": -3.3,
+    "totalWorkHoursToDate": 150.5,
+    "projectedTotalWorkHours": 230.7,
+    "projectedOvertimeHours": 53.3,
+    "remainingToLimit": -8.3,
     "riskLevel": "LIMIT",
     "recoveryOptions": [
       {
         "paidLeaveDays": 0,
-        "maxDailyOvertimeHours": 1.56,
-        "description": "年休なし：残り8日間、1日あたり1.56時間以内"
+        "maxDailyWorkHours": 9.56,
+        "description": "年休なし：残り8日間、1日あたり9.56時間以内"
       },
       {
         "paidLeaveDays": 1,
-        "maxDailyOvertimeHours": 2.34,
-        "description": "年休1日取得：残り7日間、1日あたり2.34時間以内"
+        "maxDailyWorkHours": 10.34,
+        "description": "年休1日取得：残り7日間、1日あたり10.34時間以内"
       },
       {
         "paidLeaveDays": 2,
-        "maxDailyOvertimeHours": 3.42,
-        "description": "年休2日取得：残り6日間、1日あたり3.42時間以内"
+        "maxDailyWorkHours": 11.42,
+        "description": "年休2日取得：残り6日間、1日あたり11.42時間以内"
       }
     ]
   },
   "evaluation80": {
     "limit": 80,
-    "currentHours": 40.5,
-    "projectedHours": 60.8,
-    "remainingHours": 19.2,
+    "totalWorkHoursToDate": 150.5,
+    "projectedTotalWorkHours": 230.7,
+    "projectedOvertimeHours": 61.3,
+    "remainingToLimit": 18.7,
     "riskLevel": "OK",
     "recoveryOptions": [
       {
         "paidLeaveDays": 0,
-        "maxDailyOvertimeHours": 4.94,
-        "description": "年休なし：残り8日間、1日あたり4.94時間以内"
+        "maxDailyWorkHours": 12.94,
+        "description": "年休なし：残り8日間、1日あたり12.94時間以内"
       }
     ]
   },
   "references": {
     "appliedRules": [
       "月45時間上限（時間外のみ）",
-      "80時間基準（休日労働含む、簡易単月評価）"
+      "80時間基準（休日労働含む、簡易単月評価）",
+      "月の法定労働時間: 171.4時間（30日の月）"
     ]
   }
 }
@@ -99,17 +102,20 @@ Claude Desktop や MCP Inspector で以下のように入力します：
 
 各評価（`evaluation45`, `evaluation80`）には以下が含まれます：
 - `limit`: 上限値（45 または 80）
-- `currentHours`: 現在の累計時間
-- `projectedHours`: 月末時点の予測時間数
-- `remainingHours`: 上限までの残余時間（負の場合は超過見込み）
+- `totalWorkHoursToDate`: 昨日までの総労働時間（入力値そのまま）
+- `projectedTotalWorkHours`: 月末予測の総労働時間
+- `projectedOvertimeHours`: 月末予測の時間外労働（または時間外+休日）
+- `remainingToLimit`: 上限までの残り時間（負の場合は超過見込み）
 - `riskLevel`: リスクレベル
   - `OK`: 余裕あり
   - `WARN`: 上限の80%以上に到達
   - `LIMIT`: 上限超過の恐れ
 - `recoveryOptions`: 複数のリカバリー選択肢（配列）
   - `paidLeaveDays`: 年休取得日数
-  - `maxDailyOvertimeHours`: 残期間の1日あたり上限時間
+  - `maxDailyWorkHours`: 残期間の1日あたり上限総労働時間
   - `description`: 分かりやすい説明文
+
+**重要**: フレックス制度対応のため、「現在の時間外」は算出しません。予測ベースでのみ評価します。
 
 ### 実行イメージ
 
@@ -123,26 +129,29 @@ Claude: check36.assess_current_month を実行します...
 
 【結果】
 ■ 月45時間上限（時間外のみ）
-- 現在: 32.5時間 / 45時間
-- 月末予測: 48.3時間
-- 上限まで: あと12.5時間（超過見込み -3.3時間）⚠️ LIMIT
+- 昨日までの総労働時間: 150.5時間
+- 月末予測の総労働時間: 230.7時間
+- 月末予測の時間外労働: 53.3時間
+- 45hまでの残り: -8.3時間（超過見込み）⚠️ LIMIT
 
 超えないための選択肢：
-  ① 年休なし：残り8日間、1日あたり1.56時間以内
-  ② 年休1日取得：残り7日間、1日あたり2.34時間以内
-  ③ 年休2日取得：残り6日間、1日あたり3.42時間以内
+  ① 年休なし：残り8日間、1日あたり9.56時間以内
+  ② 年休1日取得：残り7日間、1日あたり10.34時間以内
+  ③ 年休2日取得：残り6日間、1日あたり11.42時間以内
 
 ■ 80時間基準（休日労働含む）
-- 現在: 40.5時間 / 80時間
-- 月末予測: 60.8時間
-- 上限まで: あと39.5時間（余裕あり）✅ OK
+- 昨日までの総労働時間: 150.5時間
+- 月末予測の総労働時間: 230.7時間
+- 月末予測の時間外+休日: 61.3時間
+- 80hまでの残り: 18.7時間（余裕あり）✅ OK
 
 超えないための選択肢：
-  ① 年休なし：残り8日間、1日あたり4.94時間以内
+  ① 年休なし：残り8日間、1日あたり12.94時間以内
 
 【アドバイス】
-このペースだと月45時間を超過する見込みです。
-年休を1〜2日取得するか、残り期間の時間外を抑えることをお勧めします。
+このペースだと月45時間（時間外）を超過する見込みです。
+年休を1〜2日取得するか、残り期間の労働時間を1日9.56時間以内に抑えることをお勧めします。
+（フレックス制度を活用して、1日の労働時間を柔軟に調整できます）
 ```
 
 ## ドキュメント

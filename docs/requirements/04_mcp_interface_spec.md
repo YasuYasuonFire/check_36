@@ -17,34 +17,38 @@
 
 - 出力（JSON Schema 概要）
   - evaluation45: {
-      limit: number, // 上限値（45）
-      currentHours: number, // 現在の累計
-      projectedHours: number, // 月末予測
-      remainingHours: number, // 上限までの残余（負の場合は超過見込み）
+      limit: number,                      // 上限値（45）
+      totalWorkHoursToDate: number,       // 昨日までの総労働時間（入力値）
+      projectedTotalWorkHours: number,    // 月末予測の総労働時間
+      projectedOvertimeHours: number,     // 月末予測の時間外労働
+      remainingToLimit: number,           // 上限までの残り（負=超過見込み）
       riskLevel: "OK"|"WARN"|"LIMIT",
       recoveryOptions: [
         {
           paidLeaveDays: number,
-          maxDailyOvertimeHours: number,
-          description: string
+          maxDailyWorkHours: number,      // 1日あたり上限総労働時間
+          description: string             // "年休N日取得：残りX日間、1日あたりY時間以内"
         }
       ]
     }
   - evaluation80: {
-      limit: number, // 上限値（80）
-      currentHours: number, // 現在の累計（時間外+休日）
-      projectedHours: number,
-      remainingHours: number,
+      limit: number,                      // 上限値（80）
+      totalWorkHoursToDate: number,       // 昨日までの総労働時間（入力値）
+      projectedTotalWorkHours: number,    // 月末予測の総労働時間
+      projectedOvertimeHours: number,     // 月末予測の時間外+休日労働
+      remainingToLimit: number,           // 上限までの残り（負=超過見込み）
       riskLevel: "OK"|"WARN"|"LIMIT",
       recoveryOptions: [
         {
           paidLeaveDays: number,
-          maxDailyOvertimeHours: number,
-          description: string
+          maxDailyWorkHours: number,      // 1日あたり上限総労働時間
+          description: string             // "年休N日取得：残りX日間、1日あたりY時間以内"
         }
       ]
     }
   - references: { appliedRules: string[] }
+  
+  ※ フレックス制度対応：「現在の時間外」は算出せず、予測ベースで評価
 
 - 備考
   - 80hは簡易単月比較。将来は複数月平均評価へ拡張予定。

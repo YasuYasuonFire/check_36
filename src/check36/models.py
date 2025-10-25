@@ -56,7 +56,7 @@ class LimitAssessment(BaseModel):
     limit: float = Field(description="上限値")
     totalWorkHoursToDate: float = Field(description="昨日までの総労働時間")
     projectedTotalWorkHours: float = Field(description="月末予測の総労働時間")
-    projectedOvertimeHours: float = Field(description="月末予測の時間外労働")
+    projectedOvertimeAndHolidayHours: float = Field(description="月末予測の時間外+休日労働")
     remainingToLimit: float = Field(description="上限までの残り（負=超過見込み）")
     riskLevel: Literal["OK", "WARN", "LIMIT"] = Field(description="リスクレベル")
     recoveryOptions: list[RecoveryOption] = Field(description="リカバリー選択肢")

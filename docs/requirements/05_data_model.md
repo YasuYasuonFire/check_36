@@ -16,10 +16,10 @@
       references: { appliedRules: string[] }
     }
   - LimitAssessment {
-      projectedHours: number,
-      deltaToLimit: number,
+      projectedOvertimeAndHolidayHours: number, // 予測時間外+休日
+      remainingToLimit: number,
       riskLevel: "OK"|"WARN"|"LIMIT",
-      recovery: { suggestedPaidLeaveDays: number, suggestedMaxDailyOvertimeHours: number }
+      recoveryOptions: object[] // 詳細はMCP I/F仕様書を参照
     }
 
 - テンプレート

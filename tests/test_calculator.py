@@ -21,29 +21,33 @@ def test_assess_ok_case():
 
     # 45h評価
     assert result.evaluation45.riskLevel == "OK"
-    assert result.evaluation45.projectedOvertimeHours < 45.0
+    assert result.evaluation45.projectedOvertimeAndHolidayHours < 45.0
     assert result.evaluation45.remainingToLimit > 0
 
     # 80h評価
     assert result.evaluation80.riskLevel == "OK"
-    assert result.evaluation80.projectedOvertimeHours < 80.0
+    assert result.evaluation80.projectedOvertimeAndHolidayHours < 80.0
 
 
-def test_assess_warn_case():
-    """WARNケース: 80%接近"""
+def test_assess_warn_case_with_holiday_work():
+    """WARNケース: 休日労働を含めて45hに接近"""
     input_data = SimpleInput(
-        totalWorkHoursToDate=140.0,
-        holidayWorkHoursToDate=5.0,
+        totalWorkHoursToDate=124.0, # OT予測は約35.2h
+        holidayWorkHoursToDate=6.0, # 合計で41.2h (45hの80%以上)
         workingDaysElapsed=12,
         workingDaysRemaining=8,
-        currentDate="2025-04-18",
+        currentDate="2025-04-18", # 30日の月
         autoCalculateWeekdays=False,
     )
 
     result = assess_current_month(input_data)
 
-    # 45h評価がWARNまたはLIMIT
-    assert result.evaluation45.riskLevel in ["WARN", "LIMIT"]
+    # 休日労働(6h)を加算した結果、45h評価がWARNになる
+    assert result.evaluation45.riskLevel == "WARN"
+    # (124/12 * 20 - 171.43) + 6 = 206.66 - 171.43 + 6 = 35.23 + 6 = 41.23
+    # 45 * 0.8 = 36.0 なのでWARN
+    assert result.evaluation45.projectedOvertimeAndHolidayHours > (45.0 * 0.8)
+    assert result.evaluation45.projectedOvertimeAndHolidayHours < 45.0
 
 
 def test_assess_limit_case():
@@ -61,34 +65,48 @@ def test_assess_limit_case():
 
     # 45h評価がLIMIT
     assert result.evaluation45.riskLevel == "LIMIT"
-    assert result.evaluation45.projectedOvertimeHours > 45.0
+    assert result.evaluation45.projectedOvertimeAndHolidayHours > 45.0
     assert result.evaluation45.remainingToLimit < 0
 
     # リカバリー選択肢が複数ある
     assert len(result.evaluation45.recoveryOptions) > 1
 
 
-def test_recovery_options_generation():
-    """リカバリー選択肢の生成テスト"""
+def test_recovery_options_logic():
+    """リカバリー選択肢のロジックテスト"""
+    # projected OT = (180 / 18 * 22) - 177.1 = 220 - 177.1 = 42.9
+    # projected OT + holiday = 42.9 + 5.0 = 47.9 > 45 (LIMIT)
     input_data = SimpleInput(
-        totalWorkHoursToDate=150.0,
+        totalWorkHoursToDate=180.0,
         holidayWorkHoursToDate=5.0,
-        workingDaysElapsed=15,
-        workingDaysRemaining=8,
-        currentDate="2025-04-18",
+        workingDaysElapsed=18, # 1日10hペース
+        workingDaysRemaining=4,
+        currentDate="2025-10-27", # 31日の月
         autoCalculateWeekdays=False,
     )
 
     result = assess_current_month(input_data)
+    assert result.evaluation45.riskLevel == "LIMIT"
 
-    # 年休0日のオプションが存在
-    assert any(opt.paidLeaveDays == 0 for opt in result.evaluation45.recoveryOptions)
+    # --- リカバリー計算の検証 ---
+    # legal_work_hours = 177.1
+    # allowed_overtime = 45 - 5 = 40
+    # target_total_hours = 177.1 + 40 = 217.1
+    # remaining_possible_hours = 217.1 - 180 = 37.1
+    
+    # 1. 年休0日
+    # remaining_hours_after_leave = 37.1
+    # max_daily = 37.1 / 4 = 9.275
+    option0 = result.evaluation45.recoveryOptions[0]
+    assert option0.paidLeaveDays == 0
+    assert option0.maxDailyWorkHours == pytest.approx(9.28, 0.01)
 
-    # 各オプションに説明文がある
-    for opt in result.evaluation45.recoveryOptions:
-        assert opt.description
-        assert "日間" in opt.description
-        assert "時間以内" in opt.description
+    # 2. 年休1日
+    # remaining_hours_after_leave = 37.1 + 8 = 45.1
+    # max_daily = 45.1 / 3 = 15.03
+    option1 = result.evaluation45.recoveryOptions[1]
+    assert option1.paidLeaveDays == 1
+    assert option1.maxDailyWorkHours == pytest.approx(15.03, 0.01)
 
 
 def test_zero_elapsed_days():
@@ -122,7 +140,7 @@ def test_legal_work_hours_calculation():
     result = assess_current_month(input_data)
 
     # 30日の月の法定労働時間は約171.4時間
-    assert "171" in result.references["appliedRules"][2]
+    assert "171" in result.references["appliedRules"][3]
 
 
 def test_auto_calculate_weekdays_mode():

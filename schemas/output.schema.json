@@ -22,16 +22,17 @@
   "definitions": {
     "LimitAssessment": {
       "type": "object",
-      "required": ["limit", "totalWorkHoursToDate", "projectedTotalWorkHours", "projectedOvertimeHours", "remainingToLimit", "riskLevel", "recoveryOptions"],
+      "required": ["limit", "totalWorkHoursToDate", "projectedTotalWorkHours", "projectedOvertimeAndHolidayHours", "remainingToLimit", "riskLevel", "recoveryOptions"],
       "properties": {
-        "limit": { "type": "number" },
-        "totalWorkHoursToDate": { "type": "number" },
-        "projectedTotalWorkHours": { "type": "number" },
-        "projectedOvertimeHours": { "type": "number" },
-        "remainingToLimit": { "type": "number" },
-        "riskLevel": { "type": "string", "enum": ["OK", "WARN", "LIMIT"] },
+        "limit": { "type": "number", "description": "この評価で適用される上限値（例: 45, 80）" },
+        "totalWorkHoursToDate": { "type": "number", "description": "前日までの総労働時間（入力値）" },
+        "projectedTotalWorkHours": { "type": "number", "description": "月末時点での予測総労働時間" },
+        "projectedOvertimeAndHolidayHours": { "type": "number", "description": "月末時点での予測時間外労働時間と休日労働時間の合計" },
+        "remainingToLimit": { "type": "number", "description": "上限までの残余時間。マイナスは超過見込みを示す。" },
+        "riskLevel": { "type": "string", "enum": ["OK", "WARN", "LIMIT"], "description": "上限到達のリスクレベル" },
         "recoveryOptions": {
           "type": "array",
+          "description": "上限超過を回避するためのリカバリープランの選択肢",
           "items": {
             "type": "object",
             "required": ["paidLeaveDays", "maxDailyWorkHours", "description"],

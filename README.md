@@ -154,6 +154,82 @@ Claude: check36.assess_current_month を実行します...
 （フレックス制度を活用して、1日の労働時間を柔軟に調整できます）
 ```
 
+## セットアップ
+
+### 必要要件
+- Python 3.10以上
+- pip または uv
+
+### インストール
+
+```bash
+# リポジトリをクローン
+git clone https://github.com/YasuYasuonFire/check_36.git
+cd check_36
+
+# 依存関係をインストール（開発用含む）
+pip install -e ".[dev]"
+
+# または venv を使用
+python -m venv .venv
+source .venv/bin/activate  # Windowsの場合: .venv\Scripts\activate
+pip install -e ".[dev]"
+```
+
+### テスト実行
+
+```bash
+# 全テスト実行
+pytest
+
+# 詳細表示
+pytest -v
+
+# カバレッジ付き
+pytest --cov=src/check36
+```
+
+### MCPサーバー起動
+
+```bash
+# サーバー起動
+python -m src.check36.server
+
+# または
+python src/check36/server.py
+```
+
+## Claude Desktop での使用方法
+
+### 1. MCP設定ファイルに追加
+
+`~/Library/Application Support/Claude/claude_desktop_config.json` に以下を追加：
+
+```json
+{
+  "mcpServers": {
+    "check36": {
+      "command": "python",
+      "args": ["-m", "src.check36.server"],
+      "cwd": "/path/to/check_36"
+    }
+  }
+}
+```
+
+### 2. Claude Desktop を再起動
+
+### 3. 使用例
+
+Claude に以下のように話しかけます：
+
+```
+今月の総労働時間が150.5時間、休日労働が8時間です。
+15日働いて、今日含めて残り8日です。上限チェックしてください。
+```
+
+Claude が自動的に `assess_current_month_tool` を呼び出して結果を表示します。
+
 ## ドキュメント
 
 - docs/requirements/README.md: ドキュメント目次
@@ -166,3 +242,34 @@ Claude: check36.assess_current_month を実行します...
 - schemas/: 入出力スキーマ
 - templates/: 入力テンプレート例
 - IMPLEMENTATION_PLAN.md: 実装計画
+
+## 開発
+
+### プロジェクト構成
+
+```
+check_36/
+├── src/check36/
+│   ├── __init__.py
+│   ├── server.py       # MCPサーバーエントリポイント
+│   ├── models.py       # Pydanticモデル
+│   ├── calculator.py   # コア計算ロジック
+│   └── utils.py        # ユーティリティ関数
+├── tests/
+│   └── test_calculator.py
+├── pyproject.toml
+└── README.md
+```
+
+### コード品質チェック
+
+```bash
+# 型チェック
+mypy src/check36
+
+# リンター
+ruff check src/check36
+
+# フォーマット
+ruff format src/check36
+```
